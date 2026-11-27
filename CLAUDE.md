@@ -23,6 +23,19 @@ Run these from the repo root:
 
 When a test project is added, run it with `dotnet test`. Run a single test with `dotnet test --filter "FullyQualifiedName~<Name>"`.
 
+## Docker (PostgreSQL)
+
+`docker-compose.yml` defines a single `postgres` service (`postgres:16-alpine`). Its database, user, password and host port are read from `.env` (copy it from `.env.example`; `.env` is git-ignored). The API is not containerized yet and still runs with `dotnet run`.
+
+Run these from the repo root:
+
+- First-time setup: `cp .env.example .env`
+- Start PostgreSQL: `docker compose up -d`
+- Stop it (data is kept in the `pgdata` volume): `docker compose down`
+- Stop it and delete the data: `docker compose down -v`
+
+Changing `POSTGRES_USER` or `POSTGRES_PASSWORD` has no effect on an already-initialized volume. Run `docker compose down -v` to reinitialize. To use another host port (e.g. if 5432 is taken), change `POSTGRES_PORT` in `.env` and recreate the container.
+
 ## Notes
 
 - `app.UseHttpsRedirection()` is on. When you call the app over HTTP with the `http` profile, a redirect warning can show up in the logs. This is expected.
