@@ -1,6 +1,6 @@
 # SPEC 02 — Dominio de eventos del inbox
 
-> **Estado:** aprobado
+> **Estado:** implementado
 > **Depende de:** SPEC 01
 > **Fecha:** 2026-11-26
 > **Objetivo:** Modelar en `WebhookInbox/Domain/` la entidad `InboxEvent` con su ciclo de vida y la regla de que un mismo `EventId` no se registra ni se procesa con éxito más de una vez, cubierto con tests unitarios.
@@ -102,19 +102,19 @@ Convenciones:
 
 ## Criterios de aceptación
 
-- [ ] `dotnet build WebhookInbox.slnx` compila sin errores ni warnings nuevos.
-- [ ] `dotnet test` pasa todos los tests y hay al menos un test por cada fila de la tabla de transiciones.
-- [ ] Existen las carpetas `WebhookInbox/Domain/Entities`, `Enums`, `Exceptions`, `Repositories` y `Services` con los archivos descritos.
-- [ ] `InboxEvent.Receive(...)` deja `Status == Received`, `AttemptCount == 0`, `ProcessedAt == null` y `LastError == null`.
-- [ ] `Receive` con `eventId` vacío lanza `ArgumentException`.
-- [ ] Llamar a `StartProcessing()` sobre un evento `Processed` lanza `InvalidEventTransitionException`.
-- [ ] `MarkProcessed` sobre un evento `Received` (sin pasar por `Processing`) lanza `InvalidEventTransitionException`.
-- [ ] Un evento `Failed` puede volver a `Processing`, y `AttemptCount` pasa de 1 a 2.
-- [ ] `InboxEventRegistrar.RegisterAsync` con un `EventId` ya existente lanza `DuplicateEventException` y no llama a `AddAsync`.
-- [ ] `RegisterAsync` con un `EventId` nuevo llama a `AddAsync` una vez y devuelve un evento `Received` con `ReceivedAt` igual a la hora del `TimeProvider`.
-- [ ] Ningún archivo en `WebhookInbox/Domain/` tiene `using` de `Microsoft.AspNetCore` ni de `Microsoft.EntityFrameworkCore`.
-- [ ] `UnitTest1.cs` ya no existe.
-- [ ] `Program.cs` no tiene cambios.
+- [x] `dotnet build WebhookInbox.slnx` compila sin errores ni warnings nuevos.
+- [x] `dotnet test` pasa todos los tests y hay al menos un test por cada fila de la tabla de transiciones.
+- [x] Existen las carpetas `WebhookInbox/Domain/Entities`, `Enums`, `Exceptions`, `Repositories` y `Services` con los archivos descritos.
+- [x] `InboxEvent.Receive(...)` deja `Status == Received`, `AttemptCount == 0`, `ProcessedAt == null` y `LastError == null`.
+- [x] `Receive` con `eventId` vacío lanza `ArgumentException`.
+- [x] Llamar a `StartProcessing()` sobre un evento `Processed` lanza `InvalidEventTransitionException`.
+- [x] `MarkProcessed` sobre un evento `Received` (sin pasar por `Processing`) lanza `InvalidEventTransitionException`.
+- [x] Un evento `Failed` puede volver a `Processing`, y `AttemptCount` pasa de 1 a 2.
+- [x] `InboxEventRegistrar.RegisterAsync` con un `EventId` ya existente lanza `DuplicateEventException` y no llama a `AddAsync`.
+- [x] `RegisterAsync` con un `EventId` nuevo llama a `AddAsync` una vez y devuelve un evento `Received` con `ReceivedAt` igual a la hora del `TimeProvider`.
+- [x] Ningún archivo en `WebhookInbox/Domain/` tiene `using` de `Microsoft.AspNetCore` ni de `Microsoft.EntityFrameworkCore`.
+- [x] `UnitTest1.cs` ya no existe.
+- [x] `Program.cs` no tiene cambios.
 
 ## Decisiones
 

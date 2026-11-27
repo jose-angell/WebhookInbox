@@ -4,12 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-WebhookInbox is an ASP.NET Core minimal API project on .NET 10 (`net10.0`, nullable and implicit usings on). Right now it is still the unchanged `webapi` template: `WebhookInbox/Program.cs` sets up the whole app, and the only endpoint is the sample `GET /weatherforecast`. There are no test projects, controllers, DI registrations or persistence yet. The webhook-inbox features still need to be built.
+WebhookInbox is an ASP.NET Core minimal API project on .NET 10 (`net10.0`, nullable and implicit usings on). `WebhookInbox/Program.cs` is still the unchanged `webapi` template and the only endpoint is the sample `GET /weatherforecast`. The domain model of the inbox exists in `WebhookInbox/Domain/` (`InboxEvent` with its lifecycle `Received → Processing → Processed/Failed`, and `InboxEventRegistrar`, which rejects an already registered `EventId`), covered by xUnit tests in `WebhookInbox.Tests/`. There are no controllers, DI registrations or persistence yet. The real `IInboxEventRepository` implementation (EF Core) is still to be built and will go in an `Infrastructure/` folder.
 
 ## Layout
 
 - `WebhookInbox.slnx`: solution file in the new XML `.slnx` format (needs .NET 9.0.200+ SDK / VS 2022 17.13+).
-- `WebhookInbox/`: the single web project. Endpoints are mapped inline in `Program.cs` with `app.MapGet/MapPost`.
+- `WebhookInbox/`: the web project. Endpoints are mapped inline in `Program.cs` with `app.MapGet/MapPost`.
+- `WebhookInbox/Domain/`: domain layer, organized by type: `Entities/`, `Enums/`, `Exceptions/`, `Repositories/` (contracts only) and `Services/`. It must not reference ASP.NET Core or EF Core; time comes in as a parameter or through `TimeProvider`.
+- `WebhookInbox.Tests/`: xUnit test project referencing `WebhookInbox`. Domain tests are in `Domain/`, with an in-memory repository fake that lives only here.
 - `WebhookInbox/WebhookInbox.http`: request samples for the VS/Rider HTTP client (`@WebhookInbox_HostAddress = http://localhost:5288`). Update it when you add endpoints.
 
 ## Commands
@@ -21,7 +23,7 @@ Run these from the repo root:
 - Run (HTTPS 7283 + HTTP 5288): `dotnet run --project WebhookInbox --launch-profile https`
 - Format/lint: `dotnet format WebhookInbox.slnx`
 
-When a test project is added, run it with `dotnet test`. Run a single test with `dotnet test --filter "FullyQualifiedName~<Name>"`.
+Run the tests with `dotnet test`. Run a single test with `dotnet test --filter "FullyQualifiedName~<Name>"`.
 
 ## Docker (PostgreSQL)
 
