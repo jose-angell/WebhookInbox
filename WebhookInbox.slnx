@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="WebhookInbox.Tests/WebhookInbox.Tests.csproj" />
   <Project Path="WebhookInbox/WebhookInbox.csproj" />
 </Solution>
