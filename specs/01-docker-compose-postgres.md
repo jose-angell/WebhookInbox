@@ -1,6 +1,6 @@
 # SPEC 01 — Docker Compose con PostgreSQL 16
 
-> **Estado:** Borrador
+> **Estado:** aprobado
 > **Depende de:** —
 > **Fecha:** 2026-11-26
 > **Objetivo:** Levantar un PostgreSQL 16 local con docker-compose cuya base de datos, usuario, contraseña y puerto se leen de un archivo `.env`.
