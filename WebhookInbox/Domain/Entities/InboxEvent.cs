@@ -1,4 +1,5 @@
 using WebhookInbox.Domain.Enums;
+using WebhookInbox.Domain.Exceptions;
 
 namespace WebhookInbox.Domain.Entities;
 
@@ -36,5 +37,35 @@ public sealed class InboxEvent
         ArgumentNullException.ThrowIfNull(payload);
 
         return new InboxEvent(eventId, source, eventType, payload, receivedAt);
+    }
+
+    public void StartProcessing()
+    {
+        if (Status is not (EventStatus.Received or EventStatus.Failed))
+            throw new InvalidEventTransitionException(Status, nameof(StartProcessing));
+
+        Status = EventStatus.Processing;
+        AttemptCount++;
+    }
+
+    public void MarkProcessed(DateTimeOffset processedAt)
+    {
+        if (Status != EventStatus.Processing)
+            throw new InvalidEventTransitionException(Status, nameof(MarkProcessed));
+
+        Status = EventStatus.Processed;
+        ProcessedAt = processedAt;
+        LastError = null;
+    }
+
+    public void MarkFailed(string error)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(error);
+
+        if (Status != EventStatus.Processing)
+            throw new InvalidEventTransitionException(Status, nameof(MarkFailed));
+
+        Status = EventStatus.Failed;
+        LastError = error;
     }
 }
