@@ -1,6 +1,6 @@
 # SPEC 01 — Docker Compose con PostgreSQL 16
 
-> **Estado:** aprobado
+> **Estado:** implementado
 > **Depende de:** —
 > **Fecha:** 2026-11-26
 > **Objetivo:** Levantar un PostgreSQL 16 local con docker-compose cuya base de datos, usuario, contraseña y puerto se leen de un archivo `.env`.
@@ -51,16 +51,16 @@ Convenciones:
 
 ## Criterios de aceptación
 
-- [ ] Existe `docker-compose.yml` en la raíz con un único servicio `postgres` y imagen `postgres:16-alpine`.
-- [ ] `docker-compose.yml` no contiene ningún valor literal de base de datos, usuario, contraseña ni puerto del host.
-- [ ] `.env.example` existe y contiene exactamente `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` y `POSTGRES_PORT`.
-- [ ] `.env` está en `.gitignore` y `git status` no lo lista después de crearlo.
-- [ ] Con `.env` copiado de `.env.example`, `docker compose up -d` arranca el contenedor sin errores.
-- [ ] `docker compose exec postgres psql -U webhookinbox -d webhookinbox -c "select version();"` devuelve una versión `PostgreSQL 16.x`.
-- [ ] Cambiar `POSTGRES_PORT=5433` en `.env` y recrear el contenedor expone PostgreSQL en el puerto `5433` del host (`docker compose ps` lo muestra).
-- [ ] Una tabla creada antes de `docker compose down` sigue existiendo tras `docker compose up -d`.
-- [ ] `docker compose down -v` elimina el volumen `pgdata`.
-- [ ] `CLAUDE.md` documenta los comandos de Docker.
+- [x] Existe `docker-compose.yml` en la raíz con un único servicio `postgres` y imagen `postgres:16-alpine`.
+- [x] `docker-compose.yml` no contiene ningún valor literal de base de datos, usuario, contraseña ni puerto del host.
+- [x] `.env.example` existe y contiene exactamente `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` y `POSTGRES_PORT`.
+- [x] `.env` está en `.gitignore` y `git status` no lo lista después de crearlo.
+- [x] Con `.env` copiado de `.env.example`, `docker compose up -d` arranca el contenedor sin errores.
+- [x] `docker compose exec postgres psql -U webhookinbox -d webhookinbox -c "select version();"` devuelve una versión `PostgreSQL 16.x`.
+- [x] Cambiar `POSTGRES_PORT=5433` en `.env` y recrear el contenedor expone PostgreSQL en el puerto `5433` del host (`docker compose ps` lo muestra).
+- [x] Una tabla creada antes de `docker compose down` sigue existiendo tras `docker compose up -d`.
+- [x] `docker compose down -v` elimina el volumen `pgdata`.
+- [x] `CLAUDE.md` documenta los comandos de Docker.
 
 ## Decisiones
 
