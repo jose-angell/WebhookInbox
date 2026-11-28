@@ -1,6 +1,14 @@
+using Microsoft.EntityFrameworkCore;
+using WebhookInbox.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options
+        .UseNpgsql(builder.Configuration.GetConnectionString("WebhookInbox"))
+        .UseSnakeCaseNamingConvention());
 
 var app = builder.Build();
 

@@ -1,6 +1,6 @@
 # SPEC 03 — Infraestructura de persistencia con EF Core
 
-> **Estado:** aprobado
+> **Estado:** implementado
 > **Depende de:** SPEC 01, SPEC 02
 > **Fecha:** 2026-11-27
 > **Objetivo:** Crear en `WebhookInbox/Infrastructure/` el `AppDbContext` de EF Core sobre PostgreSQL con la configuración Fluent de `InboxEvent` y su migración inicial, registrado en DI.
@@ -92,21 +92,21 @@ Convenciones:
 
 ## Criterios de aceptación
 
-- [ ] `dotnet build WebhookInbox.slnx` compila sin errores ni warnings nuevos.
-- [ ] `dotnet test` sigue pasando todos los tests de SPEC 02.
-- [ ] Existen `WebhookInbox/Infrastructure/AppDbContext.cs`, `Infrastructure/Configurations/InboxEventConfiguration.cs` y la migración `InitialCreate` en `Infrastructure/Migrations/`.
-- [ ] `appsettings.Development.json` contiene `ConnectionStrings:WebhookInbox`.
-- [ ] `Program.cs` registra `AppDbContext` con `UseNpgsql` y `UseSnakeCaseNamingConvention`.
-- [ ] Con Postgres levantado, `dotnet ef database update --project WebhookInbox` termina sin errores.
-- [ ] `\d inbox_events` en `psql` muestra las 10 columnas del esquema con los tipos y la nulabilidad indicados.
-- [ ] `status` es de tipo `integer`.
-- [ ] `payload` es de tipo `text`.
-- [ ] Existe un índice único sobre `event_id`.
-- [ ] `select * from "__EFMigrationsHistory";` devuelve una fila con `InitialCreate`.
-- [ ] `InboxEventConfiguration` marca `xmin` como row version (visible en el model snapshot de la migración).
-- [ ] Ningún archivo en `WebhookInbox/Domain/` tiene `using` de `Microsoft.EntityFrameworkCore`.
-- [ ] `dotnet run --project WebhookInbox --launch-profile http` arranca y `GET /weatherforecast` sigue respondiendo.
-- [ ] `CLAUDE.md` documenta la carpeta `Infrastructure/` y los comandos de migraciones.
+- [x] `dotnet build WebhookInbox.slnx` compila sin errores ni warnings nuevos.
+- [x] `dotnet test` sigue pasando todos los tests de SPEC 02.
+- [x] Existen `WebhookInbox/Infrastructure/AppDbContext.cs`, `Infrastructure/Configurations/InboxEventConfiguration.cs` y la migración `InitialCreate` en `Infrastructure/Migrations/`.
+- [x] `appsettings.Development.json` contiene `ConnectionStrings:WebhookInbox`.
+- [x] `Program.cs` registra `AppDbContext` con `UseNpgsql` y `UseSnakeCaseNamingConvention`.
+- [x] Con Postgres levantado, `dotnet ef database update --project WebhookInbox` termina sin errores.
+- [x] `\d inbox_events` en `psql` muestra las 10 columnas del esquema con los tipos y la nulabilidad indicados.
+- [x] `status` es de tipo `integer`.
+- [x] `payload` es de tipo `text`.
+- [x] Existe un índice único sobre `event_id`.
+- [x] `select * from "__EFMigrationsHistory";` devuelve una fila con `InitialCreate`.
+- [x] `InboxEventConfiguration` marca `xmin` como row version (visible en el model snapshot de la migración).
+- [x] Ningún archivo en `WebhookInbox/Domain/` tiene `using` de `Microsoft.EntityFrameworkCore`.
+- [x] `dotnet run --project WebhookInbox --launch-profile http` arranca y `GET /weatherforecast` sigue respondiendo.
+- [x] `CLAUDE.md` documenta la carpeta `Infrastructure/` y los comandos de migraciones.
 
 ## Decisiones
 
