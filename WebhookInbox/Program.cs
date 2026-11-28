@@ -1,4 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using WebhookInbox.Application.Abstractions;
+using WebhookInbox.Application.Services;
+using WebhookInbox.Domain.Repositories;
+using WebhookInbox.Domain.Services;
 using WebhookInbox.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +13,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options
         .UseNpgsql(builder.Configuration.GetConnectionString("WebhookInbox"))
         .UseSnakeCaseNamingConvention());
+
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<IInboxEventRepository, EfInboxEventRepository>();
+builder.Services.AddScoped<InboxEventRegistrar>();
+builder.Services.AddScoped<IInboxEventProcessor, NoOpInboxEventProcessor>();
+builder.Services.AddScoped<InboxEventService>();
 
 var app = builder.Build();
 

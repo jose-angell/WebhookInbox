@@ -1,6 +1,6 @@
 # SPEC 04 — Casos de uso del inbox en la capa Application
 
-> **Estado:** aprobado
+> **Estado:** implementado
 > **Depende de:** SPEC 02, SPEC 03
 > **Fecha:** 2026-11-27
 > **Objetivo:** Crear en `WebhookInbox/Application/` un servicio `InboxEventService` con los casos de uso registrar, procesar, consultar por `EventId` y listar eventos, respaldado por un `EfInboxEventRepository` registrado en DI.
@@ -120,27 +120,27 @@ Convenciones:
 
 ## Criterios de aceptación
 
-- [ ] `dotnet build WebhookInbox.slnx` compila sin errores ni warnings nuevos.
-- [ ] `dotnet test` pasa todos los tests, incluidos los de SPEC 02.
-- [ ] Existen `WebhookInbox/Application/Services/InboxEventService.cs`, `Application/Dtos/InboxEventDto.cs`, `Application/Dtos/PagedResult.cs` y `Application/Abstractions/IInboxEventProcessor.cs`.
-- [ ] Existen `Infrastructure/EfInboxEventRepository.cs` e `Infrastructure/NoOpInboxEventProcessor.cs`.
-- [ ] `IInboxEventRepository` declara `GetByEventIdAsync`, `ListAsync` y `UpdateAsync`.
-- [ ] `RegisterAsync` con un `EventId` nuevo devuelve un `InboxEventDto` con `Status == Received`.
-- [ ] `RegisterAsync` con un `EventId` existente lanza `DuplicateEventException`.
-- [ ] `GetByEventIdAsync` con un `EventId` inexistente lanza `EventNotFoundException`.
-- [ ] `ListAsync(EventStatus.Failed, 1, 20)` devuelve solo eventos `Failed`, ordenados por `ReceivedAt` descendente, con `Total` correcto.
-- [ ] `ListAsync` con `pageSize` 0 o 101 lanza `ArgumentOutOfRangeException`.
-- [ ] `ProcessAsync` con procesador que termina bien devuelve `Status == Processed` y `ProcessedAt` igual a la hora del `TimeProvider`.
-- [ ] `ProcessAsync` con procesador que lanza devuelve `Status == Failed`, `LastError` igual al mensaje y no relanza.
-- [ ] `ProcessAsync` sobre un evento `Failed` lo procesa de nuevo y `AttemptCount` pasa a 2.
-- [ ] `ProcessAsync` sobre un evento `Processed` lanza `InvalidEventTransitionException` y no llama al procesador.
-- [ ] `EfInboxEventRepository.AddAsync` traduce `SqlState 23505` a `DuplicateEventException` (revisión de código).
-- [ ] `EfInboxEventRepository.UpdateAsync` traduce `DbUpdateConcurrencyException` a `ConcurrencyConflictException` (revisión de código).
-- [ ] Ningún archivo en `WebhookInbox/Application/` tiene `using` de `Microsoft.AspNetCore`, `Microsoft.EntityFrameworkCore` ni `WebhookInbox.Infrastructure`.
-- [ ] Ningún archivo en `WebhookInbox/Domain/` tiene `using` de `WebhookInbox.Application` ni de `Microsoft.EntityFrameworkCore`.
-- [ ] `dotnet run --project WebhookInbox --launch-profile http` arranca en Development sin errores de validación de DI.
-- [ ] No hay migración nueva en `Infrastructure/Migrations/`.
-- [ ] `CLAUDE.md` documenta la carpeta `Application/`.
+- [x] `dotnet build WebhookInbox.slnx` compila sin errores ni warnings nuevos.
+- [x] `dotnet test` pasa todos los tests, incluidos los de SPEC 02.
+- [x] Existen `WebhookInbox/Application/Services/InboxEventService.cs`, `Application/Dtos/InboxEventDto.cs`, `Application/Dtos/PagedResult.cs` y `Application/Abstractions/IInboxEventProcessor.cs`.
+- [x] Existen `Infrastructure/EfInboxEventRepository.cs` e `Infrastructure/NoOpInboxEventProcessor.cs`.
+- [x] `IInboxEventRepository` declara `GetByEventIdAsync`, `ListAsync` y `UpdateAsync`.
+- [x] `RegisterAsync` con un `EventId` nuevo devuelve un `InboxEventDto` con `Status == Received`.
+- [x] `RegisterAsync` con un `EventId` existente lanza `DuplicateEventException`.
+- [x] `GetByEventIdAsync` con un `EventId` inexistente lanza `EventNotFoundException`.
+- [x] `ListAsync(EventStatus.Failed, 1, 20)` devuelve solo eventos `Failed`, ordenados por `ReceivedAt` descendente, con `Total` correcto.
+- [x] `ListAsync` con `pageSize` 0 o 101 lanza `ArgumentOutOfRangeException`.
+- [x] `ProcessAsync` con procesador que termina bien devuelve `Status == Processed` y `ProcessedAt` igual a la hora del `TimeProvider`.
+- [x] `ProcessAsync` con procesador que lanza devuelve `Status == Failed`, `LastError` igual al mensaje y no relanza.
+- [x] `ProcessAsync` sobre un evento `Failed` lo procesa de nuevo y `AttemptCount` pasa a 2.
+- [x] `ProcessAsync` sobre un evento `Processed` lanza `InvalidEventTransitionException` y no llama al procesador.
+- [x] `EfInboxEventRepository.AddAsync` traduce `SqlState 23505` a `DuplicateEventException` (revisión de código).
+- [x] `EfInboxEventRepository.UpdateAsync` traduce `DbUpdateConcurrencyException` a `ConcurrencyConflictException` (revisión de código).
+- [x] Ningún archivo en `WebhookInbox/Application/` tiene `using` de `Microsoft.AspNetCore`, `Microsoft.EntityFrameworkCore` ni `WebhookInbox.Infrastructure`.
+- [x] Ningún archivo en `WebhookInbox/Domain/` tiene `using` de `WebhookInbox.Application` ni de `Microsoft.EntityFrameworkCore`.
+- [x] `dotnet run --project WebhookInbox --launch-profile http` arranca en Development sin errores de validación de DI.
+- [x] No hay migración nueva en `Infrastructure/Migrations/`.
+- [x] `CLAUDE.md` documenta la carpeta `Application/`.
 
 ## Decisiones
 
