@@ -22,6 +22,31 @@ public sealed class InboxEventService(
         return InboxEventDto.From(inboxEvent);
     }
 
+    public async Task<InboxEventDto> ProcessAsync(string eventId, CancellationToken ct)
+    {
+        var inboxEvent = await repository.GetByEventIdAsync(eventId, ct)
+                         ?? throw new EventNotFoundException(eventId);
+
+        inboxEvent.StartProcessing();
+        await repository.UpdateAsync(inboxEvent, ct);
+
+        try
+        {
+            await processor.ProcessAsync(InboxEventDto.From(inboxEvent), ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // MarkFailed rejects empty messages, so fall back to the exception type name.
+            inboxEvent.MarkFailed(string.IsNullOrEmpty(ex.Message) ? ex.GetType().Name : ex.Message);
+            await repository.UpdateAsync(inboxEvent, ct);
+            return InboxEventDto.From(inboxEvent);
+        }
+
+        inboxEvent.MarkProcessed(timeProvider.GetUtcNow());
+        await repository.UpdateAsync(inboxEvent, ct);
+        return InboxEventDto.From(inboxEvent);
+    }
+
     public async Task<InboxEventDto> GetByEventIdAsync(string eventId, CancellationToken ct)
     {
         var inboxEvent = await repository.GetByEventIdAsync(eventId, ct)

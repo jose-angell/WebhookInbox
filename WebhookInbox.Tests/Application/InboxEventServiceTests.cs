@@ -16,18 +16,17 @@ public class InboxEventServiceTests
         public override DateTimeOffset GetUtcNow() => Now;
     }
 
-    private sealed class StubProcessor : IInboxEventProcessor
-    {
-        public Task ProcessAsync(InboxEventDto inboxEvent, CancellationToken ct) => Task.CompletedTask;
-    }
-
     private static readonly DateTimeOffset Start = new(2026, 11, 27, 10, 0, 0, TimeSpan.Zero);
 
-    private static (InboxEventService Service, InMemoryInboxEventRepository Repo, MutableTimeProvider Time) Create()
+    private static (InboxEventService Service, InMemoryInboxEventRepository Repo, MutableTimeProvider Time) Create() =>
+        Create(new FakeInboxEventProcessor());
+
+    private static (InboxEventService Service, InMemoryInboxEventRepository Repo, MutableTimeProvider Time) Create(
+        IInboxEventProcessor processor)
     {
         var repo = new InMemoryInboxEventRepository();
         var time = new MutableTimeProvider(Start);
-        var service = new InboxEventService(new InboxEventRegistrar(repo, time), repo, new StubProcessor(), time);
+        var service = new InboxEventService(new InboxEventRegistrar(repo, time), repo, processor, time);
         return (service, repo, time);
     }
 
@@ -162,5 +161,123 @@ public class InboxEventServiceTests
         var result = await service.ListAsync(null, 1, pageSize, CancellationToken.None);
 
         Assert.Equal(pageSize, result.PageSize);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ProcessorSucceeds_ReturnsProcessedWithTimeProviderTime()
+    {
+        var processor = new FakeInboxEventProcessor();
+        var (service, repo, time) = Create(processor);
+        await service.RegisterAsync("evt_1", "stripe", "invoice.paid", "{}", CancellationToken.None);
+        var processedAt = Start.AddMinutes(5);
+        time.Now = processedAt;
+
+        var dto = await service.ProcessAsync("evt_1", CancellationToken.None);
+
+        Assert.Equal(EventStatus.Processed, dto.Status);
+        Assert.Equal(processedAt, dto.ProcessedAt);
+        Assert.Equal(1, dto.AttemptCount);
+        Assert.Equal(1, processor.CallCount);
+        Assert.Equal(EventStatus.Processing, processor.LastReceived!.Status);
+        Assert.Equal(2, repo.UpdateCallCount);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ProcessorThrows_ReturnsFailedWithLastErrorAndDoesNotRethrow()
+    {
+        var processor = new FakeInboxEventProcessor { ExceptionToThrow = new InvalidOperationException("boom") };
+        var (service, repo, _) = Create(processor);
+        await service.RegisterAsync("evt_1", "stripe", "invoice.paid", "{}", CancellationToken.None);
+
+        var dto = await service.ProcessAsync("evt_1", CancellationToken.None);
+
+        Assert.Equal(EventStatus.Failed, dto.Status);
+        Assert.Equal("boom", dto.LastError);
+        Assert.Null(dto.ProcessedAt);
+        Assert.Equal(2, repo.UpdateCallCount);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ProcessorThrowsWithEmptyMessage_StillMarksFailed()
+    {
+        var processor = new FakeInboxEventProcessor { ExceptionToThrow = new InvalidOperationException("") };
+        var (service, _, _) = Create(processor);
+        await service.RegisterAsync("evt_1", "stripe", "invoice.paid", "{}", CancellationToken.None);
+
+        var dto = await service.ProcessAsync("evt_1", CancellationToken.None);
+
+        Assert.Equal(EventStatus.Failed, dto.Status);
+        Assert.Equal(nameof(InvalidOperationException), dto.LastError);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_FromFailed_RetriesAndAttemptCountBecomesTwo()
+    {
+        var processor = new FakeInboxEventProcessor { ExceptionToThrow = new InvalidOperationException("boom") };
+        var (service, _, _) = Create(processor);
+        await service.RegisterAsync("evt_1", "stripe", "invoice.paid", "{}", CancellationToken.None);
+        await service.ProcessAsync("evt_1", CancellationToken.None);
+        processor.ExceptionToThrow = null;
+
+        var dto = await service.ProcessAsync("evt_1", CancellationToken.None);
+
+        Assert.Equal(EventStatus.Processed, dto.Status);
+        Assert.Equal(2, dto.AttemptCount);
+        Assert.Null(dto.LastError);
+        Assert.Equal(2, processor.CallCount);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_AlreadyProcessed_ThrowsInvalidTransitionWithoutCallingProcessor()
+    {
+        var processor = new FakeInboxEventProcessor();
+        var (service, _, _) = Create(processor);
+        await service.RegisterAsync("evt_1", "stripe", "invoice.paid", "{}", CancellationToken.None);
+        await service.ProcessAsync("evt_1", CancellationToken.None);
+
+        await Assert.ThrowsAsync<InvalidEventTransitionException>(() =>
+            service.ProcessAsync("evt_1", CancellationToken.None));
+
+        Assert.Equal(1, processor.CallCount);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_AlreadyProcessing_ThrowsInvalidTransitionWithoutCallingProcessor()
+    {
+        var processor = new FakeInboxEventProcessor();
+        var (service, repo, _) = Create(processor);
+        await service.RegisterAsync("evt_1", "stripe", "invoice.paid", "{}", CancellationToken.None);
+        repo.Events.Single().StartProcessing();
+
+        await Assert.ThrowsAsync<InvalidEventTransitionException>(() =>
+            service.ProcessAsync("evt_1", CancellationToken.None));
+
+        Assert.Equal(0, processor.CallCount);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_Missing_ThrowsEventNotFoundException()
+    {
+        var processor = new FakeInboxEventProcessor();
+        var (service, _, _) = Create(processor);
+
+        var ex = await Assert.ThrowsAsync<EventNotFoundException>(() =>
+            service.ProcessAsync("nope", CancellationToken.None));
+
+        Assert.Equal("nope", ex.EventId);
+        Assert.Equal(0, processor.CallCount);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ProcessorCancelled_RethrowsAndDoesNotMarkFailed()
+    {
+        var processor = new FakeInboxEventProcessor { ExceptionToThrow = new OperationCanceledException() };
+        var (service, repo, _) = Create(processor);
+        await service.RegisterAsync("evt_1", "stripe", "invoice.paid", "{}", CancellationToken.None);
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            service.ProcessAsync("evt_1", CancellationToken.None));
+
+        Assert.Equal(EventStatus.Processing, repo.Events.Single().Status);
     }
 }
